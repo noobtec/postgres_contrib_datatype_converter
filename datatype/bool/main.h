@@ -111,15 +111,16 @@ int pdc_bool__from_text(
 		,in_len
 		,&result
 	)){
-		if(*out_len >= sizeof(bool)){
-			*((bool*)*out) = result;
+		if(*out_len >= sizeof(uint8_t)){
+			*((uint8_t*)*out) = result;
+			*out_len = sizeof(uint8_t);
 			*inplace = true;
 			return 0;
 		}else{
-			bool *tmp = *out = malloc(sizeof(bool));
+			uint8_t *tmp = *out = malloc(sizeof(uint8_t));
 			if(tmp){
 				*tmp = result;
-				*out_len = sizeof(bool);
+				*out_len = sizeof(uint8_t);
 				*inplace = false;
 				return 0;
 			}
