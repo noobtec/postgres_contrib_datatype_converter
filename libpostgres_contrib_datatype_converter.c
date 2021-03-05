@@ -7,7 +7,7 @@ typedef uint32_t Oid;
 typedef _Bool bool;
 
 typedef struct _postgres_datatype_converter_t{
-
+	char *error;
 }postgres_datatype_converter_t;
 
 typedef struct _postgres_datatype_converter_type_t{
@@ -159,6 +159,8 @@ bool postgres_datatype_converter__init(
 	postgres_datatype_converter_entry_t *entry;
 	bool ret = true;
 	size_t l = 0;
+	
+	ctx->error = 0;
 
 	for(;ret && l < postgres_datatype_converter__get_length(ctx);l++){
 		entry = &postgres_datatype_converter_entry[l];
