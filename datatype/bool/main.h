@@ -104,7 +104,10 @@ int pdc_bool__from_text(
 	,size_t *out_len
 	,bool *inplace
 ){
+	int ret = -1;
 	bool result;
+	
+	*out_len = sizeof(uint8_t);
 
 	if(pdc_bool__parse_bool_with_len(
 		 in
@@ -113,21 +116,19 @@ int pdc_bool__from_text(
 	)){
 		if(*out_len >= sizeof(uint8_t)){
 			*((uint8_t*)*out) = result;
-			*out_len = sizeof(uint8_t);
 			*inplace = true;
-			return 0;
+			ret = 0;
 		}else{
 			uint8_t *tmp = *out = malloc(sizeof(uint8_t));
 			if(tmp){
 				*tmp = result;
-				*out_len = sizeof(uint8_t);
 				*inplace = false;
-				return 0;
+				ret = 0;
 			}
 		}
 	}
 
-	return -1;
+	return ret;
 }
 
 int pdc_bool__to_text(
@@ -140,27 +141,27 @@ int pdc_bool__to_text(
 	,size_t *out_len
 	,bool *inplace
 ){
-	char *tmp = 0;
+	int ret = -1;
+	char *tmp;
+	
 	*inplace = true;
+	*out_len = 2;
+	
+	if(in_len >= sizeof(uint8_t)){
+		if(*out_len < 2){
+			tmp = *out = malloc(2);
+			*inplace = false;
+		}else{
+			tmp = *out;
+		}
 
-	if(in_len < sizeof(uint8_t)){
-		return -1;
+		if(tmp){
+			tmp[0] = *((uint8_t*)in) ? '1' : '0';
+			tmp[1] = 0;
+			
+			ret = 0;
+		}
 	}
 
-	if(*out_len < 2){
-		tmp = *out = malloc(2);
-		*out_len = 2;
-		*inplace = false;
-	}else{
-		tmp = *out;
-	}
-
-	if(tmp){
-		tmp[0] = *((uint8_t*)in) ? '1' : '0';
-		tmp[1] = 0;
-		*out_len = 2;
-		return 0;
-	}
-
-	return -1;
+	return ret;
 }
