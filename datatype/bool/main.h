@@ -143,6 +143,10 @@ int pdc_bool__to_text(
 	char *tmp = 0;
 	*inplace = true;
 
+	if(in_len < sizeof(uint8_t)){
+		return -1;
+	}
+
 	if(*out_len < 2){
 		tmp = *out = malloc(2);
 		*out_len = 2;
@@ -152,7 +156,7 @@ int pdc_bool__to_text(
 	}
 
 	if(tmp){
-		tmp[0] = *((bool*)in) ? '1' : '0';
+		tmp[0] = *((uint8_t*)in) ? '1' : '0';
 		tmp[1] = 0;
 		*out_len = 2;
 		return 0;
