@@ -3,4 +3,6 @@ POSTGRES_DATATYPE_CONVERTER_ENTRY(
 	,pdc_bool__from_text
 	,pdc_bool__to_text
 	,0
+	,0
+	,0
 )
