@@ -47,21 +47,21 @@ typedef struct _postgres_datatype_converter_entry_t{
 }postgres_datatype_converter_entry_t;
 
 #define POSTGRES_DATATYPE_CONVERTER_ENTRY( \
-	 oid_                               \
-	,from_text_                          \
-	,to_text_                         \
-	,init_                          \
-	,deinit_                         \
-	,data_                              \
+	 oid_                              \
+	,from_text_                        \
+	,to_text_                          \
+	,init_                             \
+	,deinit_                           \
+	,data_                             \
 )                                          \
-[oid_] = { \
-	 .oid = (oid_)                      \
-	,.from_text = (from_text_)            \
-	,.to_text = (to_text_)          \
-	,.init = (init_)            \
-	,.deinit = (deinit_)          \
-	,.data = (data_)          \
-},\
+[oid_] = {                                 \
+	 .oid = (oid_)                     \
+	,.from_text = (from_text_)         \
+	,.to_text = (to_text_)             \
+	,.init = (init_)                   \
+	,.deinit = (deinit_)               \
+	,.data = (data_)                   \
+},
 
 #include "main.h"
 
@@ -69,7 +69,12 @@ postgres_datatype_converter_entry_t postgres_datatype_converter_entry[] = {
 #include "entry.h"
 };
 
-#define POSTGRES__ARRAY_LENGTH() (sizeof(x)/sizeof(x[0]))
+static inline void postgres_datatype_converter__length(
+	 postgres_datatype_converter_t *ctx
+){
+	return sizeof(postgres_datatype_converter_entry)
+	     / sizeof(postgres_datatype_converter_entry[0]);
+}
 
 int postgres_datatype_converter__from_text(
 	 postgres_datatype_converter_t *ctx
@@ -80,12 +85,13 @@ int postgres_datatype_converter__from_text(
 	,size_t *out_len
 	,bool *inplace
 ){
-	return type->oid
-	     < POSTGRES__ARRAY_LENGTH(postgres_datatype_converter_entry)
-	    && postgres_datatype_converter_entry[type->oid].from_text
-	     ? postgres_datatype_converter_entry[type->oid].from_text(
+	postgres_datatype_converter_entry_t *entry;
+	
+	return type->oid < postgres_datatype_converter__length(ctx)
+	    && (entry = &postgres_datatype_converter_entry[type->oid])->from_text
+	     ? entry->from_text(
 		 ctx
-		,&postgres_datatype_converter_entry[type->oid]
+		,entry
 		,type
 		,in
 		,in_len
@@ -104,12 +110,12 @@ int postgres_datatype_converter__to_text(
 	,size_t *out_len
 	,bool *inplace
 ){
-	return type->oid
-	     < POSTGRES__ARRAY_LENGTH(postgres_datatype_converter_entry)
-	    && postgres_datatype_converter_entry[type->oid].to_text
-	     ? postgres_datatype_converter_entry[type->oid].to_text(
+	postgres_datatype_converter_entry_t *entry;
+	return type->oid < postgres_datatype_converter__length(ctx)
+	    && (entry = &postgres_datatype_converter_entry[type->oid])->to_text
+	     ? entry->to_text(
 		 ctx
-		,&postgres_datatype_converter_entry[type->oid]
+		,entry
 		,type
 		,in
 		,in_len
@@ -122,46 +128,48 @@ int postgres_datatype_converter__to_text(
 bool postgres_datatype_converter__init(
 	 postgres_datatype_converter_t *ctx
 ){
-	int ret = 0;
+	postgres_datatype_converter_entry_t *entry;
+	bool ret = true;
 	size_t l = 0;
 
-	for(;!ret && l < POSTGRES__ARRAY_LENGTH(postgres_datatype_converter_entry);l++){
- 	 	if(postgres_datatype_converter_entry[l].init){
-ret = postgres_datatype_converter_entry[l].init(
-		 ctx
-		,&postgres_datatype_converter_entry[l]
-);
+	for(;ret && l < postgres_datatype_converter__length(ctx);l++){
+		entry = &postgres_datatype_converter_entry[l];
+ 	 	if(entry->init){
+			ret = entry->init(
+				 ctx
+				,entry
+			);
 	 	}
 	}
 
-if(!ret && l > 0){
-	while(--l >= 0){
- 	 	if(postgres_datatype_converter_entry[l].deinit){
- 	 	 	 ret = postgres_datatype_converter_entry[l].deinit(
-		 	 	 ctx
-		 	 	,&postgres_datatype_converter_entry[l]
- 	 	 	 );
-	 	}
+	if(!ret && l > 0){
+		while(--l >= 0){
+			if(entry->deinit){
+				 entry->deinit(
+					 ctx
+					,entry
+				 );
+			}
+		}
 	}
-}
 
-	return !ret;
+	return ret;
 }
 
 void postgres_datatype_converter__deinit(
 	 postgres_datatype_converter_t *ctx
 ){
-	for(size_t l=0;l<POSTGRES__ARRAY_LENGTH(postgres_datatype_converter_entry);l++){
- 	 	if(postgres_datatype_converter_entry[l].deinit){
- 	 	 	 ret = postgres_datatype_converter_entry[l].deinit(
+	postgres_datatype_converter_entry_t *entry;
+	for(size_t l=0;l < postgres_datatype_converter__length(ctx);l++){
+		entry = &postgres_datatype_converter_entry[l];
+ 	 	if(entry->deinit){
+ 	 	 	 entry->deinit(
 		 	 	 ctx
-		 	 	,&postgres_datatype_converter_entry[l]
+		 	 	,entry
  	 	 	 );
 	 	}
 	}
 }
-
-#undef POSTGRES__ARRAY_LENGTH
 
 /*
 int main(){
