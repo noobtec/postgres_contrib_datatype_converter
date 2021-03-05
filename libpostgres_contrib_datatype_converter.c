@@ -69,7 +69,7 @@ postgres_datatype_converter_entry_t postgres_datatype_converter_entry[] = {
 #include "entry.h"
 };
 
-static inline void postgres_datatype_converter__length(
+static inline size_t postgres_datatype_converter__get_length(
 	 postgres_datatype_converter_t *ctx
 ){
 	return sizeof(postgres_datatype_converter_entry)
@@ -87,7 +87,7 @@ int postgres_datatype_converter__from_text(
 ){
 	postgres_datatype_converter_entry_t *entry;
 	
-	return type->oid < postgres_datatype_converter__length(ctx)
+	return type->oid < postgres_datatype_converter__get_length(ctx)
 	    && (entry = &postgres_datatype_converter_entry[type->oid])->from_text
 	     ? entry->from_text(
 		 ctx
@@ -111,7 +111,7 @@ int postgres_datatype_converter__to_text(
 	,bool *inplace
 ){
 	postgres_datatype_converter_entry_t *entry;
-	return type->oid < postgres_datatype_converter__length(ctx)
+	return type->oid < postgres_datatype_converter__get_length(ctx)
 	    && (entry = &postgres_datatype_converter_entry[type->oid])->to_text
 	     ? entry->to_text(
 		 ctx
@@ -132,7 +132,7 @@ bool postgres_datatype_converter__init(
 	bool ret = true;
 	size_t l = 0;
 
-	for(;ret && l < postgres_datatype_converter__length(ctx);l++){
+	for(;ret && l < postgres_datatype_converter__get_length(ctx);l++){
 		entry = &postgres_datatype_converter_entry[l];
  	 	if(entry->init){
 			ret = entry->init(
@@ -160,7 +160,7 @@ void postgres_datatype_converter__deinit(
 	 postgres_datatype_converter_t *ctx
 ){
 	postgres_datatype_converter_entry_t *entry;
-	for(size_t l=0;l < postgres_datatype_converter__length(ctx);l++){
+	for(size_t l=0;l < postgres_datatype_converter__get_length(ctx);l++){
 		entry = &postgres_datatype_converter_entry[l];
  	 	if(entry->deinit){
  	 	 	 entry->deinit(
