@@ -71,7 +71,7 @@ postgres_datatype_converter_entry_t postgres_datatype_converter_entry[] = {
 
 #define POSTGRES__ARRAY_LENGTH() (sizeof(x)/sizeof(x[0]))
 
-int postgres_datatype_converter__form_text(
+int postgres_datatype_converter__from_text(
 	 postgres_datatype_converter_t *ctx
 	,postgres_datatype_converter_type_t *type
 	,const char *in
@@ -119,7 +119,7 @@ int postgres_datatype_converter__to_text(
 	) : -2;
 }
 
-int postgres_datatype_converter__init(
+bool postgres_datatype_converter__init(
 	 postgres_datatype_converter_t *ctx
 ){
 	int ret = 0;
@@ -145,7 +145,7 @@ if(!ret && l > 0){
 	}
 }
 
-	return ret;
+	return !ret;
 }
 
 void postgres_datatype_converter__deinit(
@@ -165,6 +165,8 @@ void postgres_datatype_converter__deinit(
 
 /*
 int main(){
+postgres_datatype_converter_t ctx;
+
 	const char *in = "true";
 	size_t in_len = strlen(in);
 	bool tmp;
@@ -172,8 +174,11 @@ int main(){
 	size_t out_len = sizeof(bool);
 	bool inplace;
 
-	if(!postgres__from_text(
-		 0
+if(postgres_datatype_converter__init(&ctx)){
+
+
+	if(!postgres_datatype_converter__from_text(
+		 &ctx
 		,PDC_BOOL
 		,in
 		,in_len
@@ -185,8 +190,8 @@ int main(){
 		char *str_out = str_tmp;
 		size_t str_out_len = sizeof(str_out)/sizeof(str_out[0]);
 		printf("postgres__from_text(bool) = %d\n",tmp);
-		if(!postgres__to_text(
-			 0
+		if(!postgres_datatype_converter__to_text(
+			 &ctx
 			,PDC_BOOL
 			,&tmp
 			,sizeof(bool)
@@ -207,5 +212,8 @@ int main(){
 	}else{
 		puts("error");
 	}
+
+postgres_datatype_converter__deinit(&ctx);
+}
 }
 */
