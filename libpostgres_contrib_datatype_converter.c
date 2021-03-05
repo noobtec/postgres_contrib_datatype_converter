@@ -1,12 +1,13 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 typedef uint32_t Oid;
 typedef _Bool bool;
 
 typedef struct _postgres_datatype_converter_t{
-	
+
 }postgres_datatype_converter_t;
 
 typedef struct _postgres_datatype_converter_type_t{
@@ -35,7 +36,7 @@ typedef struct _postgres_datatype_converter_entry_t{
 		,size_t *out_len
 		,bool *inplace
 	);
-	bool (*init)(
+	int (*init)(
 		 postgres_datatype_converter_t *ctx
 		,struct _postgres_datatype_converter_entry_t *entry
 	);
@@ -69,6 +70,31 @@ postgres_datatype_converter_entry_t postgres_datatype_converter_entry[] = {
 #include "entry.h"
 };
 
+void postgres_datatype_converter__set_last_error(
+	 postgres_datatype_converter_t *ctx
+	,char *format
+	,...
+){
+	va_list args;
+  	va_start(args,format);
+	
+	if(ctx->error){
+		free(ctx->error);
+	}
+	
+	if(vasprintf(&ctx->error,format,args) == -1){
+		ctx->error = 0;
+	}
+	
+	va_end(args);
+}
+
+char *postgres_datatype_converter__get_last_error(
+	 postgres_datatype_converter_t *ctx
+){
+	return ctx->error;
+}
+
 static inline size_t postgres_datatype_converter__get_length(
 	 postgres_datatype_converter_t *ctx
 ){
@@ -76,7 +102,7 @@ static inline size_t postgres_datatype_converter__get_length(
 	     / sizeof(postgres_datatype_converter_entry[0]);
 }
 
-int postgres_datatype_converter__from_text(
+bool postgres_datatype_converter__from_text(
 	 postgres_datatype_converter_t *ctx
 	,postgres_datatype_converter_type_t *type
 	,const char *in
@@ -89,19 +115,20 @@ int postgres_datatype_converter__from_text(
 	
 	return type->oid < postgres_datatype_converter__get_length(ctx)
 	    && (entry = &postgres_datatype_converter_entry[type->oid])->from_text
-	     ? entry->from_text(
-		 ctx
-		,entry
-		,type
-		,in
-		,in_len
-		,out
-		,out_len
-		,inplace
-	) : -2;
+	    && !entry->from_text(
+			 ctx
+			,entry
+			,type
+			,in
+			,in_len
+			,out
+			,out_len
+			,inplace
+		)
+	;
 }
 
-int postgres_datatype_converter__to_text(
+bool postgres_datatype_converter__to_text(
 	 postgres_datatype_converter_t *ctx
 	,postgres_datatype_converter_type_t *type
 	,void *in
@@ -113,16 +140,17 @@ int postgres_datatype_converter__to_text(
 	postgres_datatype_converter_entry_t *entry;
 	return type->oid < postgres_datatype_converter__get_length(ctx)
 	    && (entry = &postgres_datatype_converter_entry[type->oid])->to_text
-	     ? entry->to_text(
-		 ctx
-		,entry
-		,type
-		,in
-		,in_len
-		,out
-		,out_len
-		,inplace
-	) : -2;
+	    && !entry->to_text(
+			 ctx
+			,entry
+			,type
+			,in
+			,in_len
+			,out
+			,out_len
+			,inplace
+		)
+	;
 }
 
 bool postgres_datatype_converter__init(
@@ -135,7 +163,7 @@ bool postgres_datatype_converter__init(
 	for(;ret && l < postgres_datatype_converter__get_length(ctx);l++){
 		entry = &postgres_datatype_converter_entry[l];
  	 	if(entry->init){
-			ret = entry->init(
+			ret = !entry->init(
 				 ctx
 				,entry
 			);
@@ -169,6 +197,10 @@ void postgres_datatype_converter__deinit(
  	 	 	 );
 	 	}
 	}
+	
+	if(ctx->error){
+		free(ctx->error);
+	}
 }
 
 /*
@@ -185,7 +217,7 @@ postgres_datatype_converter_t ctx;
 if(postgres_datatype_converter__init(&ctx)){
 
 
-	if(!postgres_datatype_converter__from_text(
+	if(postgres_datatype_converter__from_text(
 		 &ctx
 		,PDC_BOOL
 		,in
@@ -198,7 +230,7 @@ if(postgres_datatype_converter__init(&ctx)){
 		char *str_out = str_tmp;
 		size_t str_out_len = sizeof(str_out)/sizeof(str_out[0]);
 		printf("postgres__from_text(bool) = %d\n",tmp);
-		if(!postgres_datatype_converter__to_text(
+		if(postgres_datatype_converter__to_text(
 			 &ctx
 			,PDC_BOOL
 			,&tmp
