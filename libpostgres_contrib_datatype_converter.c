@@ -94,7 +94,7 @@ void postgres_datatype_converter__set_last_error(
 char *postgres_datatype_converter__get_last_error(
 	 postgres_datatype_converter_t *ctx
 ){
-	return ctx->error;
+	return ctx->error ? ctx->error : "Unknown Error";
 }
 
 static inline size_t postgres_datatype_converter__get_length(
