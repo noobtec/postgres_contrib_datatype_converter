@@ -57,6 +57,8 @@ postgres_datatype_converter_entry_t postgres_datatype_converter_entry[] = {
 #include "entry.h"
 };
 
+#define POSTGRES__ARRAY_LENGTH() (sizeof(x)/sizeof(x[0]))
+
 int postgres__from_text(
 	 postgres_datatype_converter_t *ctx
 	,postgres_datatype_converter_type_t *type
@@ -66,7 +68,9 @@ int postgres__from_text(
 	,size_t *out_len
 	,bool *inplace
 ){
-	return postgres_datatype_converter_entry[type->oid].from_text
+	return type->oid
+	     < POSTGRES__ARRAY_LENGTH(postgres_datatype_converter_entry)
+	    && postgres_datatype_converter_entry[type->oid].from_text
 	     ? postgres_datatype_converter_entry[type->oid].from_text(
 		 ctx
 		,&postgres_datatype_converter_entry[type->oid]
@@ -88,7 +92,9 @@ int postgres__to_text(
 	,size_t *out_len
 	,bool *inplace
 ){
-	return postgres_datatype_converter_entry[type->oid].to_text
+	return type->oid
+	     < POSTGRES__ARRAY_LENGTH(postgres_datatype_converter_entry)
+	    && postgres_datatype_converter_entry[type->oid].to_text
 	     ? postgres_datatype_converter_entry[type->oid].to_text(
 		 ctx
 		,&postgres_datatype_converter_entry[type->oid]
@@ -100,6 +106,9 @@ int postgres__to_text(
 		,inplace
 	) : -2;
 }
+
+#undef POSTGRES__ARRAY_LENGTH
+
 /*
 int main(){
 	const char *in = "true";
