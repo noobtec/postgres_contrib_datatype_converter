@@ -35,7 +35,7 @@ typedef struct _postgres_datatype_converter_entry_t{
 		,size_t *out_len
 		,bool *inplace
 	);
-	int (*init)(
+	bool (*init)(
 		 postgres_datatype_converter_t *ctx
 		,struct _postgres_datatype_converter_entry_t *entry
 	);
