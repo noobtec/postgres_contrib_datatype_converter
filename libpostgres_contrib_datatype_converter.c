@@ -66,12 +66,6 @@ typedef struct _postgres_datatype_converter_entry_t{
 	,.data = (data_)                   \
 },
 
-#include "main.h"
-
-postgres_datatype_converter_entry_t postgres_datatype_converter_entry[] = {
-#include "entry.h"
-};
-
 void postgres_datatype_converter__set_last_error(
 	 postgres_datatype_converter_t *ctx
 	,char *format
@@ -96,6 +90,12 @@ char *postgres_datatype_converter__get_last_error(
 ){
 	return ctx->error ? ctx->error : "Unknown Error";
 }
+
+#include "main.h"
+
+postgres_datatype_converter_entry_t postgres_datatype_converter_entry[] = {
+#include "entry.h"
+};
 
 static inline size_t postgres_datatype_converter__get_length(
 	 postgres_datatype_converter_t *ctx
