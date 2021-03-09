@@ -9,7 +9,80 @@ postgres_datatype_converter_type_t pdc_bool = {
 #define PDC_BOOL (&pdc_bool)
 
 #define pg_strncasecmp strncasecmp
+#define PDC_BOOL__CMP(v,l,u,o)\
+if(!len--){goto L_ERR;}\
+switch(*v++){\
+     case l:\
+     case u:\
+{o}break;\
+     default:\
+goto L_ERR;\
+}
 
+#define PDC_BOOL__CMP2(v,l,u,ll,uu,o)
+PDC_BOOL__CMP(v,l,u,PDC_BOOL__CMP(v,ll,uu,o))
+
+#define PDC_BOOL__CMP3(v,l,u,ll,uu,lll,uuu,o)
+PDC_BOOL__CMP2(v,l,u,ll,uu,PDC_BOOL__CMP(v,lll,uuu,o))
+
+#define PDC_BOOL__CMP4(v,l,u,ll,uu,lll,uuu,llll,uuuu,o)
+PDC_BOOL__CMP3(v,l,u,ll,uu,lll,uuu,PDC_BOOL__CMP(v,llll,uuuu,o))
+
+bool
+pdc_bool__parse_bool_with_len(const char *value, size_t len, bool *result)
+{
+ bool val;
+
+if(!len--){goto L_ERR;}
+ switch (*value++)
+ {
+     case 't':
+     case 'T':
+         PDC_BOOL__CMP3(value,'r','R','u','U','e','E',val = true;);
+         break;
+     case 'f':
+     case 'F':
+         PDC_BOOL__CMP4(value,'a','A','l','L','s','S','e','E',val = false;);
+         break;
+     case 'y':
+     case 'Y':
+         PDC_BOOL__CMP2(value,'e','E','s','S',val = true;);
+         break;
+     case 'n':
+     case 'N':
+         PDC_BOOL__CMP(value,'o','O',val = false;);
+         break;
+     case 'o':
+     case 'O':
+if(len == 1){
+PDC_BOOL__CMP(value,'n','N',val = true;);
+}else{
+PDC_BOOL__CMP2(value,'f','F','f','F',val = false;);
+}
+         break;
+     case '1':
+         val = true;
+
+         
+         break;
+     case '0':
+         val = false;
+
+         
+         break;
+     default:
+         goto L_ERR;
+ }
+
+ if (!len)
+     return true;
+
+L_ERR:
+ return false;
+}
+
+
+/*
 bool
 pdc_bool__parse_bool_with_len(const char *value, size_t len, bool *result)
 {
@@ -92,7 +165,10 @@ pdc_bool__parse_bool_with_len(const char *value, size_t len, bool *result)
  return false;
 }
 
+*/
+
 #undef pg_strncasecmp
+
 
 int pdc_bool__from_text(
 	 postgres_datatype_converter_t *ctx
