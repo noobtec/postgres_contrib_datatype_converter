@@ -8,7 +8,7 @@ postgres_datatype_converter_type_t pdc_bool = {
 
 #define PDC_BOOL (&pdc_bool)
 
-#define pg_strncasecmp strncasecmp
+
 #define PDC_BOOL__CMP(v,l,u,o)\
 if(!len--){goto L_ERR;}\
 switch(*v++){\
@@ -80,9 +80,14 @@ PDC_BOOL__CMP2(value,'f','F','f','F',val = false;);
 L_ERR:
  return false;
 }
-
+#undef PDC_BOOL__CMP
+#undef PDC_BOOL__CMP2
+#undef PDC_BOOL__CMP3
+#undef PDC_BOOL__CMP4
 
 /*
+#define pg_strncasecmp strncasecmp
+
 bool
 pdc_bool__parse_bool_with_len(const char *value, size_t len, bool *result)
 {
@@ -164,10 +169,10 @@ pdc_bool__parse_bool_with_len(const char *value, size_t len, bool *result)
      *result = false;        /* suppress compiler warning */
  return false;
 }
-
+#undef pg_strncasecmp
 */
 
-#undef pg_strncasecmp
+
 
 
 int pdc_bool__from_text(
