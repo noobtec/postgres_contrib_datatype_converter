@@ -74,8 +74,10 @@ PDC_BOOL__CMP2(value,'f','F','f','F',val = false;);
          goto L_ERR;
  }
 
- if (!len)
+ if (!len){
+*result = val;
      return true;
+}
 
 L_ERR:
  return false;
