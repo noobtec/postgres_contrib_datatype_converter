@@ -42,6 +42,12 @@ pdc_bool__parse_bool_with_len(const char *value, size_t len, bool *result)
 		goto L_ERR;
 	}
 	switch (*value++){
+		case '1':
+			val = true;
+		break;
+		case '0':
+			val = false;
+		break;
 		case 't':
 		case 'T':
 			PDC_BOOL__CMP3(value,'r','R','u','U','e','E',val = true;);
@@ -65,12 +71,6 @@ pdc_bool__parse_bool_with_len(const char *value, size_t len, bool *result)
 			}else{
 				PDC_BOOL__CMP2(value,'f','F','f','F',val = false;);
 			}
-		break;
-		case '1':
-			val = true;
-		break;
-		case '0':
-			val = false;
 		break;
 		default:
 			goto L_ERR;
